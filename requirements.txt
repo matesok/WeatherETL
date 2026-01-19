@@ -1,3 +1,5 @@
 requests
 python-dotenv
 logging
+pyarrow
+psycopg2-binary

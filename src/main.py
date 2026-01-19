@@ -1,5 +1,6 @@
 from extract import weather_api
-from transform.transform_weather import transform_data
+from transform.transform_weather import transform_batch
+from load.load_weather import load_weather_data
 import logging
 import sys
 
@@ -13,5 +14,5 @@ def configure_logging():
 if __name__ == "__main__":
     configure_logging()
     extraction_dir = weather_api.get_weather_data(['Kuźnia Raciborska', 'Racibórz', 'Warszawa', 'Toruń'])
-    print(extraction_dir)
-    transform_data(extraction_dir)
+    transform_batch(extraction_dir)
+    load_weather_data(extraction_dir)

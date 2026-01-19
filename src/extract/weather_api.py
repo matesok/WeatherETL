@@ -25,12 +25,7 @@ def get_weather_data(cities):
         json_response = response.json()
         city_id = _get_openweather_city_id(json_response)
         run_id = sha1(str(str(city_id) + str(request_ts)).encode()).hexdigest()[:8]
-        raw_data = _enhance_raw_data(json_response, response.status_code, city_id, extraction_time, extraction_hour)
-        # already_exists = check_if_weather_already_extracted(city_id, extraction_hour)
-        #
-        # if already_exists:
-        #     return None
-
+        raw_data = _enhance_raw_data(json_response, response.status_code, run_id, extraction_hour, request_ts)
         save_json_file(raw_data,
                        RAW_DIR / f"{extraction_hour}/weather_{city_id}_{run_id}.json")
 
@@ -55,13 +50,13 @@ def get_city_coordinates(city):
     return lat, lon
 
 
-def _enhance_raw_data(response, status_code, city_id, extraction_time, extraction_hour, source='openweathermap'):
+def _enhance_raw_data(response, status_code, fetch_id, extraction_hour, request_ts, source='openweathermap'):
     return {
         'metadata': {
-            'city_id': city_id,
+            'fetch_id': fetch_id,
             'source': source,
             'status_code': status_code,
-            'fetched_at': extraction_time.isoformat(),
+            'fetched_ts': int(request_ts.timestamp()),
             'request_hour': extraction_hour
         },
         'data': response

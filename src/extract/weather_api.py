@@ -7,8 +7,8 @@ from src.utils.requests_utils import try_get_request
 from src.utils.files_utils import save_json_file, check_for_existing_coords, append_to_city_coords, RAW_DIR
 from dotenv import load_dotenv
 
-load_dotenv()
-api_key = os.getenv("API_KEY")
+# load_dotenv()
+# api_key = os.environ.get("API_KEY")
 base_api_url = "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API_KEY}"
 base_coord_api = "http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit=1&appid={API_KEY}"
 
@@ -21,6 +21,7 @@ def get_weather_data(cities):
     for city in cities:
         lat, lon = get_city_coordinates(city)
         request_ts = datetime.now(timezone.utc)
+        api_key = os.environ["API_KEY"]
         response = try_get_request(base_api_url.format(lat=lat, lon=lon, API_KEY=api_key), 30)
         json_response = response.json()
         city_id = _get_openweather_city_id(json_response)
@@ -41,6 +42,7 @@ def get_city_coordinates(city):
         logging.info(f"City coordinates for {city} were already retrieved")
         return coords['lat'], coords['lon']
 
+    api_key = os.environ["API_KEY"]
     response = try_get_request(base_coord_api.format(city=city, country_code='PL', API_KEY=api_key), 30)
     first_coord = response.json()[0]
     lat, lon = first_coord["lat"], first_coord["lon"]

@@ -2,8 +2,13 @@ import json
 import glob
 import logging
 from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+import os
+if os.getenv('AIRFLOW_HOME'):
+    # Jesteśmy w Airflow
+    PROJECT_ROOT = Path('/opt/airflow')
+else:
+    # Lokalny development
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / 'data'
 RAW_DIR = DATA_DIR / 'raw'
 PROCESSED_DIR = DATA_DIR / 'processed'

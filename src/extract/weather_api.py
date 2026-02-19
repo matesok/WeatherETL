@@ -7,7 +7,7 @@ from src.utils.requests_utils import try_get_request
 from src.utils.files_utils import save_json_file, check_for_existing_coords, append_to_city_coords, RAW_DIR
 from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 # api_key = os.environ.get("API_KEY")
 base_api_url = "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API_KEY}"
 base_coord_api = "http://api.openweathermap.org/geo/1.0/direct?q={city},{country_code}&limit=1&appid={API_KEY}"

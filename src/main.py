@@ -3,6 +3,8 @@ from transform.transform_weather import transform_batch
 from load.load_weather import load_weather_data
 import logging
 import sys
+from dotenv import load_dotenv
+
 
 def configure_logging():
     logging.basicConfig(
@@ -11,8 +13,9 @@ def configure_logging():
         handlers=[logging.StreamHandler(sys.stdout)]
     )
 
+
 if __name__ == "__main__":
     configure_logging()
-    extraction_dir = weather_api.get_weather_data(['Kuźnia Raciborska', 'Racibórz', 'Warszawa', 'Toruń'])
-    transform_batch(extraction_dir)
-    load_weather_data(extraction_dir)
+    s3_dir = weather_api.get_weather_data(['Kuźnia Raciborska', 'Racibórz', 'Warszawa', 'Toruń'])
+    processed_s3_dir = transform_batch(s3_dir)
+    load_weather_data(processed_s3_dir)

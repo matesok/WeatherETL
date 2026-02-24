@@ -1,46 +1,57 @@
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime, timedelta
+import logging
+import os
+import sys
+
+from dotenv import load_dotenv
+
 from src.extract import weather_api
 from src.transform import transform_weather
 from src.load import load_weather
-import sys
+from airflow.decorators import dag, task
+from pendulum import datetime, duration
 
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2026, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
 
-cities = ['Kuźnia Raciborska', 'Racibórz', 'Warszawa', 'Toruń']
-
-with DAG(
-        'weather_etl',
-        default_args=default_args,
-        description='Weather ETL',
-        schedule_interval='@hourly',
-        catchup=False,
-) as dag:
-    extract_task = PythonOperator(
-        task_id='extract_weather',
-        python_callable=weather_api.get_weather_data,
-        op_args=[cities]
+def configure_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)]
     )
 
-    transform_task = PythonOperator(
-        task_id='transform_weather',
-        python_callable=transform_weather.transform_batch,
-        op_args=[extract_task.output],
-    )
 
-    load_task = PythonOperator(
-        task_id='load_weather',
-        python_callable=load_weather.load_weather_data,
-        op_args=[transform_task.output],
-    )
+@dag(
+    schedule='@hourly',
+    start_date=datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
+    tags=["weather"],
+    default_args={
+        "retries": 3,
+        "retry_delay": duration(minutes=5),
+        "retry_exponential_backoff": True,
+        "max_retry_delay": duration(minutes=30),
+    },
+)
+def weather_dag():
+    configure_logging()
+    cities_str = os.getenv("CITIES_TO_FETCH", [])
+    cities = cities_str.split(',') if cities_str else []
+    logging.info("cities: {}".format(cities))
 
-    extract_task >> transform_task >> load_task
+    @task
+    def extract_weather():
+        return weather_api.get_weather_data(cities)
+
+    @task
+    def transform_weather_task(s3_directory):
+        return transform_weather.transform_batch(s3_directory)
+
+    @task
+    def load_weather_task(processed_s3_directory):
+        load_weather.load_weather_data(processed_s3_directory)
+
+    s3_directory = extract_weather()
+    processed_s3_directory = transform_weather_task(s3_directory)
+    load_weather_task(processed_s3_directory)
+
+
+weather_dag()

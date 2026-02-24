@@ -1,38 +1,32 @@
+from io import BytesIO
+
 import pandas as pd
-import numpy as np
-import psycopg2
 from psycopg2.extras import execute_values
-import os
-from psycopg2.extensions import register_adapter, AsIs
 
-from src.load.sql_queries import DATE_LOAD, TIME_LOAD, LOCATION_LOAD, METADATA_LOAD, SELECT_DATE_IDS, SELECT_TIME_IDS, \
-    SELECT_LOCATION_IDS, SELECT_METADATA_IDS, CONDITION_LOAD, SELECT_CONDITION_IDS, FACT_LOAD_NEW
-from src.utils.files_utils import PROCESSED_DIR
+from src.load.sql_queries import *
+from src.utils.db_utils import get_psycopg
 
-register_adapter(np.int64, AsIs)
-register_adapter(np.float64, AsIs)
+from src.aws.aws_s3 import fetch_file
 
 
-def load_weather_data(path):
-    path = path + ".parquet"
-    df = pd.read_parquet(PROCESSED_DIR / path, engine='pyarrow')
+def load_weather_data(processed_s3_key):
+    bf = fetch_file(processed_s3_key)
+    parquet_bytes = BytesIO(bf)
+
+    df = pd.read_parquet(parquet_bytes, engine='pyarrow')
     location = df[['city_id', 'city_name', 'lat', 'lon']].drop_duplicates()
     metadata = df[['fetch_id', 'fetch_ts', 'source']]
     condition = df[['condition_id', 'main_weather', 'weather_description']].drop_duplicates()
     date = df[['date', 'day_of_week', 'month', 'quarter', 'year']].drop_duplicates()
     time = df[['time', 'hour', 'minute', 'second']].drop_duplicates()
 
-    with psycopg2.connect(database=os.getenv('DB_NAME'), user=os.getenv('DB_USER'), password=os.getenv('DB_PASSWORD'),
-                          host=os.getenv('DB_HOST'),
-                          port=os.getenv('DB_PORT')) as conn:
-        with conn.cursor() as cur:
-            insert_df_to_db(df=location, insert_query=LOCATION_LOAD, cur=cur)
-            insert_df_to_db(df=metadata, insert_query=METADATA_LOAD, cur=cur)
-            insert_df_to_db(df=condition, insert_query=CONDITION_LOAD, cur=cur)
-            insert_df_to_db(df=date, insert_query=DATE_LOAD, cur=cur)
-            insert_df_to_db(df=time, insert_query=TIME_LOAD, cur=cur)
-            load_facts(weather_df=df, cur=cur)
-            conn.commit()
+    with get_psycopg() as cur:
+        insert_df_to_db(df=location, insert_query=LOCATION_LOAD, cur=cur)
+        insert_df_to_db(df=metadata, insert_query=METADATA_LOAD, cur=cur)
+        insert_df_to_db(df=condition, insert_query=CONDITION_LOAD, cur=cur)
+        insert_df_to_db(df=date, insert_query=DATE_LOAD, cur=cur)
+        insert_df_to_db(df=time, insert_query=TIME_LOAD, cur=cur)
+        load_facts(weather_df=df, cur=cur)
 
 
 def insert_df_to_db(df, insert_query, cur):
@@ -96,4 +90,3 @@ def load_facts(weather_df, cur):
     tuples = [tuple(x) for x in to_load.to_numpy()]
 
     execute_values(cur, sql, tuples)
-

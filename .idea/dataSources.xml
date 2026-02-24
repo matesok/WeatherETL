@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="postgres@localhost" uuid="e0f9a818-785b-4441-9a9b-b0c1a49ff954">
+    <data-source source="LOCAL" name="weather_db@localhost" uuid="bb5894b4-97c5-4852-87da-4857a65bf087">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/postgres</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/weather_db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="airflow@localhost" uuid="9e0ab57c-ef7e-4f1e-8667-22bbcf24676b">
+    <data-source source="LOCAL" name="weather-db@localhost.localstack.cloud" uuid="11fcf568-d498-4c4f-99f4-69d1c468a21c">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/airflow</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost.localstack.cloud:4511/weather-db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

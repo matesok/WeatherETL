@@ -21,7 +21,6 @@ def get_weather_data(cities):
         logging.info(f"Getting weather data for {cities}")
         extraction_time = datetime.now(timezone.utc)
         extraction_hour = extraction_time.strftime("%Y/%m/%d/%H")
-
         for city in cities:
             lat, lon = get_city_coordinates(city)
             request_ts = datetime.now(timezone.utc)

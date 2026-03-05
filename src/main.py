@@ -3,7 +3,6 @@ from transform.transform_weather import transform_batch
 from load.load_weather import load_weather_data
 import logging
 import sys
-from dotenv import load_dotenv
 
 
 def configure_logging():

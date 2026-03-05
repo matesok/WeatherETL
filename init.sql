@@ -1,10 +1,39 @@
 create schema if not exists weather_data;
 
+create table if not exists weather_data.staging_weather
+(
+    id                       serial primary key,
+    fetch_id                 varchar(255) not null,
+    fetch_ts                 int          not null,
+    source                   varchar(255) not null,
+    city_id                  integer      not null, --natural key from API
+    city_name                varchar(255) not null,
+    lat                      float        not null,
+    lon                      float        not null,
+
+    "date"                   date         not null,
+    "time"                   time         not null,
+
+    condition_id             integer      not null,
+    main_weather             varchar(255) not null,
+    weather_description      varchar(255) not null,
+
+    temperature_c            float        not null,
+    temperature_feels_like_c float        not null,
+    pressure                 int          not null,
+    humidity                 int          not null,
+    wind_speed               float        not null,
+    clouds_percent           int          not null,
+    rain_1h                  float,
+    snow_1h                  float
+);
+
 create table if not exists weather_data.dim_date
 (
     id          serial primary key,
     "date"      date        not null,
     day_of_week varchar(20) not null,
+    day         int         not null,
     month       int         not null,
     quarter     int         not null,
     year        int         not null,

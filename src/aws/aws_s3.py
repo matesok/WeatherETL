@@ -10,7 +10,12 @@ _client = boto3.client(
     aws_secret_access_key='test',
     endpoint_url=os.getenv('LOCALSTACK_ENDPOINT_URL', 'http://localhost:4566'),
 )
-_bucket = os.getenv('AWS_WEATHER_BUCKET_NAME', 'bucket')
+
+def get_bucket() -> str:
+    bucket = os.getenv('AWS_WEATHER_BUCKET_NAME')
+    if not bucket:
+        raise ValueError("AWS_WEATHER_BUCKET_NAME not set")
+    return bucket
 
 
 def upload_file(buffer, stage, bucket_dir, file_name):
@@ -18,7 +23,7 @@ def upload_file(buffer, stage, bucket_dir, file_name):
     try:
         _client.upload_fileobj(
             buffer,
-            Bucket=_bucket,
+            Bucket=get_bucket(),
             Key=key
         )
         return key
@@ -28,7 +33,7 @@ def upload_file(buffer, stage, bucket_dir, file_name):
 
 def list_files(bucket_dir):
     objects = _client.list_objects_v2(
-        Bucket=_bucket,
+        Bucket=get_bucket(),
         Prefix=f'{bucket_dir}/'
     )
 
@@ -38,7 +43,7 @@ def list_files(bucket_dir):
 def fetch_file(key):
     try:
         response = _client.get_object(
-            Bucket=_bucket,
+            Bucket=get_bucket(),
             Key=key,
         )
         return response['Body'].read()
